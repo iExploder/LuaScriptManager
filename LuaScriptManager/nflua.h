@@ -86,13 +86,19 @@ namespace NFLua
 		NF_INLINE void push_multiple_value(lua_State* vm, const _Head& hd, const _Tail&... tl)
 		{
 			push_value(vm, hd);
-			push_multiple_value(vm, tl...);
+			if constexpr (sizeof...(_Tail) != 0)
+				push_multiple_value(vm, tl...);
 		}
+
+
+
+/*
 		template <class _Head>
 		NF_INLINE void push_multiple_value(lua_State* vm, const _Head& hd)
 		{
 			push_value(vm, hd);
-		}
+		}*/
+
 		NF_INLINE void push_multiple_value(lua_State* vm)
 		{
 			// Do nothing
@@ -102,7 +108,7 @@ namespace NFLua
 
 	using std::string;
 
-	template <class _Ret, class... _Args> class NFLuaFunction;
+	template <class _Ret> class NFLuaFunction;
 
 	class NFLuaFunctionBase
 	{
@@ -110,7 +116,8 @@ namespace NFLua
 		lua_State* vm_;
 		int funcIndex_;
 
-		template <class _Ret, class... _Args> friend class NFLuaFunction;
+
+		template <class _Ret> friend class NFLuaFunction;
 
 		void call(int args, int results)
 		{
@@ -162,7 +169,7 @@ namespace NFLua
 		}
 	};
 
-	template <class _Ret, class... _Args>
+	template <class _Ret>
 	class NFLuaFunction : public NFLuaFunctionBase
 	{
 	public:
@@ -170,6 +177,7 @@ namespace NFLua
 			:NFLuaFunctionBase(vm, func)
 		{}
 
+		template<class ..._Args>
 		_Ret operator()(const _Args&... args)
 		{
 			lua_rawgeti(vm_, LUA_REGISTRYINDEX, funcIndex_);
@@ -179,22 +187,23 @@ namespace NFLua
 			return _NFLuaInternal::value_extractor<_Ret>::get(vm_);
 		}
 	};
-	template <class... _Args>
-	class NFLuaFunction<void, _Args...> : public NFLuaFunctionBase
+	template <>
+	class NFLuaFunction<void> : public NFLuaFunctionBase
 	{
 	public:
 		NFLuaFunction(lua_State* vm, const string& func)
 			:NFLuaFunctionBase(vm, func)
 		{}
 
+		template<class ..._Args>
 		void operator()(const _Args&... args)
 		{
 			lua_rawgeti(vm_, LUA_REGISTRYINDEX, funcIndex_);
 			_NFLuaInternal::push_multiple_value(vm_, args...);
-			constexpr auto argNum = sizeof...(_Args);
-			call(argNum, 0);
+			call(sizeof...(_Args), 0);
 		}
 	};
+/*
 	template <>
 	class NFLuaFunction<void> : public NFLuaFunctionBase
 	{
@@ -208,7 +217,7 @@ namespace NFLua
 			lua_rawgeti(vm_, LUA_REGISTRYINDEX, funcIndex_);
 			call(0, 0);
 		}
-	};
+	};*/
 
 	class NFLuaHandler
 	{
@@ -223,10 +232,10 @@ namespace NFLua
 			::luaL_loadstring(vm, code.c_str());
 			::lua_pcall(vm, 0, 0, 0);
 		}
-		template<class _Ret = void, class... _Args>
+		template<class _Ret, class... _Args>
 		std::function<_Ret(_Args...)> getFunc(const string& func)
 		{
-			return NFLuaFunction<_Ret, _Args...>(vm, func);
+			return NFLuaFunction<_Ret>(vm, func);
 		}
 
 /*
