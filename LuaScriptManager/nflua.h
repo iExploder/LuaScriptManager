@@ -86,7 +86,12 @@ namespace NFLua
 		NF_INLINE void push_multiple_value(lua_State* vm, const _Head& hd, const _Tail&... tl)
 		{
 			push_value(vm, hd);
-			push_multiple_value(vm, tl);
+			push_multiple_value(vm, tl...);
+		}
+		template <class _Head>
+		NF_INLINE void push_multiple_value(lua_State* vm, const _Head& hd)
+		{
+			push_value(vm, hd);
 		}
 		NF_INLINE void push_multiple_value(lua_State* vm)
 		{
@@ -224,11 +229,12 @@ namespace NFLua
 			return NFLuaFunction<_Ret, _Args...>(vm, func);
 		}
 
+/*
 		template<class _Ret = void>
 		std::function<_Ret(void)> getFunc(const string& func)
 		{
 			return NFLuaFunction<_Ret>(vm, func);
-		}
+		}*/
 	};
 
 }
