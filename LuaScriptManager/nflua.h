@@ -82,17 +82,17 @@ namespace NFLua
 			}
 		};
 
-		template <class ArgsHD, class... ArgsTL>
-		NF_INLINE void push_multiple_value(lua_State* vm, const ArgsHD& hd, const ArgsTL&... tl)
+		template <class _Head, class... _Tail>
+		NF_INLINE void push_multiple_value(lua_State* vm, const _Head& hd, const _Tail&... tl)
 		{
 			push_value(vm, hd);
-			push_multiple_value(vm, tl...);
+			push_multiple_value(vm, tl);
 		}
-		template <class ArgsHD = void>
-		NF_INLINE void push_multiple_value(lua_State* vm, const ArgsHD& hd)
+		NF_INLINE void push_multiple_value(lua_State* vm)
 		{
-			push_value(vm, hd);
+			// Do nothing
 		}
+
 	}
 
 	using std::string;
